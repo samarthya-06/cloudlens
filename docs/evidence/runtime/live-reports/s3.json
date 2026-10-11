@@ -1,0 +1,238 @@
+{
+  "live": true,
+  "sample": "s3",
+  "model": "gemini-3.5-flash-lite",
+  "region": "Google Gemini Developer API",
+  "report": {
+    "title": "Synthetic Report Upload S3 Access Denied",
+    "summary": "An attempt to upload a synthetic report to S3 resulted in an AccessDenied error, causing the upload to fail and the local copy to be retained.",
+    "analysis_status": "incident_detected",
+    "observed_facts": [
+      {
+        "log_refs": [
+          "L0001"
+        ],
+        "runbook_refs": [],
+        "statement": "The application started a synthetic report upload at 2026-10-11T13:50:00Z."
+      },
+      {
+        "log_refs": [
+          "L0002",
+          "L0003"
+        ],
+        "runbook_refs": [],
+        "statement": "A PutObject operation returned an AccessDenied error for s3://synthetic-bucket/reports/demo.json."
+      },
+      {
+        "log_refs": [
+          "L0004"
+        ],
+        "runbook_refs": [],
+        "statement": "The report upload failed and the local copy was retained at 2026-10-11T13:50:02Z."
+      }
+    ],
+    "timeline": [
+      {
+        "log_refs": [
+          "L0001"
+        ],
+        "runbook_refs": [],
+        "timestamp": "2026-10-11T13:50:00Z",
+        "event": "Starting synthetic report upload"
+      },
+      {
+        "log_refs": [
+          "L0002",
+          "L0003"
+        ],
+        "runbook_refs": [],
+        "timestamp": "2026-10-11T13:50:01Z",
+        "event": "PutObject returned AccessDenied for s3://synthetic-bucket/reports/demo.json"
+      },
+      {
+        "log_refs": [
+          "L0004"
+        ],
+        "runbook_refs": [],
+        "timestamp": "2026-10-11T13:50:02Z",
+        "event": "Report upload failed; local copy retained"
+      }
+    ],
+    "hypotheses": [
+      {
+        "log_refs": [
+          "L0002",
+          "L0003"
+        ],
+        "runbook_refs": [
+          "S3-DENY:investigation:1"
+        ],
+        "possible_cause": "The calling IAM role lacks permissions, or a bucket policy/explicit deny blocks the PutObject operation.",
+        "rank": "leading",
+        "evidence_against": null,
+        "missing_evidence": [
+          "IAM identity policies",
+          "S3 bucket policy",
+          "Calling IAM role identity"
+        ]
+      }
+    ],
+    "recommended_checks": [
+      {
+        "log_refs": [
+          "L0002"
+        ],
+        "runbook_refs": [
+          "S3-DENY:investigation:1"
+        ],
+        "action": "Confirm the operation, bucket, object prefix, and actual calling IAM role.",
+        "why": "To verify whether the correct identity is being used and whether permissions are scoped properly.",
+        "expected_observation": "The identity matches the expected service role and permission assignments."
+      },
+      {
+        "log_refs": [
+          "L0002",
+          "L0003"
+        ],
+        "runbook_refs": [
+          "S3-DENY:investigation:1"
+        ],
+        "action": "Inspect relevant identity policies, bucket policies, organization controls, and permission boundaries.",
+        "why": "To identify any missing allows or explicit denies affecting the PutObject action.",
+        "expected_observation": "A policy statement explicitly allowing or denying PutObject for the target bucket path."
+      }
+    ],
+    "recovery_guidance": [
+      {
+        "log_refs": [
+          "L0002",
+          "L0003"
+        ],
+        "runbook_refs": [
+          "S3-DENY:investigation:1"
+        ],
+        "proposed_action": "Have the resource owner correct the confirmed policy or encryption discrepancy with least privilege.",
+        "prerequisites": [
+          "Identify the exact policy causing the denial",
+          "Obtain authorization to modify IAM or bucket policies"
+        ],
+        "verification_steps": [
+          "Verify the same operation against an authorized test key under the intended role",
+          "Confirm that unauthorized access remains denied"
+        ]
+      }
+    ],
+    "limitations": [
+      "The error alone does not identify which policy denied the request.",
+      "User impact beyond the failed synthetic report upload is unknown."
+    ]
+  },
+  "evidence": {
+    "lines": [
+      {
+        "id": "L0001",
+        "number": 1,
+        "text": "2026-10-11T13:50:00Z INFO starting synthetic report upload",
+        "timestamp": "2026-10-11T13:50:00Z",
+        "severity": "INFO",
+        "group": 1
+      },
+      {
+        "id": "L0002",
+        "number": 2,
+        "text": "2026-10-11T13:50:01Z ERROR PutObject returned AccessDenied for s3://synthetic-bucket/reports/demo.json",
+        "timestamp": "2026-10-11T13:50:01Z",
+        "severity": "ERROR",
+        "group": 2
+      },
+      {
+        "id": "L0003",
+        "number": 3,
+        "text": "    botocore.exceptions.ClientError: AccessDenied",
+        "timestamp": null,
+        "severity": "UNKNOWN",
+        "group": 2
+      },
+      {
+        "id": "L0004",
+        "number": 4,
+        "text": "2026-10-11T13:50:02Z WARN report upload failed; local copy retained",
+        "timestamp": "2026-10-11T13:50:02Z",
+        "severity": "WARN",
+        "group": 3
+      }
+    ],
+    "total_lines": 4,
+    "omitted_lines": 0,
+    "redactions": 0,
+    "repeated_errors": {},
+    "query": "ERROR PutObject returned AccessDenied for s3://synthetic-bucket/reports/demo.json\nbotocore.exceptions.ClientError: AccessDenied\nWARN report upload failed; local copy retained"
+  },
+  "retrieved_chunks": [
+    {
+      "id": "S3-DENY:investigation:1",
+      "runbook_id": "S3-DENY",
+      "title": "S3 access denial",
+      "section": "Diagnostic checks and recovery",
+      "text": "S3 access denial\nScope: S3 API requests returning AccessDenied\n## Symptoms\nAccessDenied; PutObject denied; S3 403 Forbidden.\n\nThese are project-authored investigation notes, not an official diagnosis. Use the supplied logs to establish observed symptoms and cite their original line identifiers. Treat configuration changes, impact and the exact root cause as unknown unless evidence supports them. This runbook suggests checks; CloudLens never executes changes to the affected system.\n\n\n## Diagnostic checks\nConfirm the operation, bucket, object prefix and actual calling IAM role. Inspect relevant identity policy, bucket policy, organization controls and permission boundaries. An explicit deny can override an allow. Check encryption requirements and KMS permissions when encryption uses a customer-managed key. Review object ownership and endpoint policy where applicable. The error alone does not identify which policy denied the request. Do not infer that adding s3:* is necessary.\n\n\n## Missing evidence\nCollect surrounding application logs, relevant deployment configuration, dependency-side evidence and a known-good comparison. Preserve timestamps when present and label absent timestamps as unknown. Record evidence that contradicts a proposed cause as well as evidence supporting it. If only a generic failure message is available, report insufficient evidence and request context rather than asserting a cause.\n\n\n## Recovery guidance\nHave the resource owner correct only the confirmed policy or encryption discrepancy with least privilege. Do not make the bucket public or remove unrelated denies. Verify the same operation against an authorized test key under the intended role and confirm that unauthorized access remains denied. Preserve a local redacted artifact if an upload fails.\n\n",
+      "source_urls": [
+        "https://docs.aws.amazon.com/AmazonS3/latest/userguide/troubleshoot-403-errors.html"
+      ],
+      "content_hash": "82b4d57e30f4855d6ed020fd8bfd7f1abc8f09d8e0b4b37811d9867a4664fc13",
+      "similarity": 0.85759037733078
+    },
+    {
+      "id": "DB-AUTH:investigation:1",
+      "runbook_id": "DB-AUTH",
+      "title": "Database authentication failures",
+      "section": "Diagnostic checks and recovery",
+      "text": "Database authentication failures\nScope: PostgreSQL application login rejected\n## Symptoms\npassword authentication failed; authentication failed for user; role login rejected.\n\nThese are project-authored investigation notes, not an official diagnosis. Use the supplied logs to establish observed symptoms and cite their original line identifiers. Treat configuration changes, impact and the exact root cause as unknown unless evidence supports them. This runbook suggests checks; CloudLens never executes changes to the affected system.\n\n\n## Diagnostic checks\nCompare the deployed database username, host, database and credential source against the approved configuration. Inspect secret version identifiers without displaying secret values. Ask the database owner for the server-side authentication rejection and the applicable host authentication rule. Check whether the role can log in and whether a recent deployment changed its environment. A password authentication error does not establish which configuration value is wrong.\n\n\n## Missing evidence\nCollect surrounding application logs, relevant deployment configuration, dependency-side evidence and a known-good comparison. Preserve timestamps when present and label absent timestamps as unknown. Record evidence that contradicts a proposed cause as well as evidence supporting it. If only a generic failure message is available, report insufficient evidence and request context rather than asserting a cause.\n\n\n## Recovery guidance\nCorrect a confirmed configuration discrepancy through the approved secret or deployment process. Do not reset passwords merely because a client login failed. If an authentication policy is the cause, obtain approval before changing it. Verify a fresh connection from the application environment, a successful health check and absence of repeated authentication failures.\n\n",
+      "source_urls": [
+        "https://www.postgresql.org/docs/current/client-authentication.html"
+      ],
+      "content_hash": "c18f9b87d1a1ba0482f2ae3d4bad928c6ac612275711317e93de4ec4d38a2059",
+      "similarity": 0.7749876379966736
+    },
+    {
+      "id": "DISK:investigation:1",
+      "runbook_id": "DISK",
+      "title": "Disk capacity exhaustion",
+      "section": "Diagnostic checks and recovery",
+      "text": "Disk capacity exhaustion\nScope: Writes failing because a filesystem or inode pool is full\n## Symptoms\nNo space left on device; ENOSPC; disk full; inode exhaustion.\n\nThese are project-authored investigation notes, not an official diagnosis. Use the supplied logs to establish observed symptoms and cite their original line identifiers. Treat configuration changes, impact and the exact root cause as unknown unless evidence supports them. This runbook suggests checks; CloudLens never executes changes to the affected system.\n\n\n## Diagnostic checks\nIdentify the path and mounted filesystem used by the failed write. Check both byte capacity and inode availability; free bytes do not rule out inode exhaustion. Inspect log growth, temporary files and retention settings without deleting evidence. If a volume was expanded, verify whether its partition and filesystem were extended as required. A disk error does not prove that increasing the cloud volume alone will fix the application.\n\n\n## Missing evidence\nCollect surrounding application logs, relevant deployment configuration, dependency-side evidence and a known-good comparison. Preserve timestamps when present and label absent timestamps as unknown. Record evidence that contradicts a proposed cause as well as evidence supporting it. If only a generic failure message is available, report insufficient evidence and request context rather than asserting a cause.\n\n\n## Recovery guidance\nRemove only approved disposable files or extend the verified filesystem through the operator\u2019s process, after preserving required evidence. Avoid blanket recursive deletion. Correct retention where growth is uncontrolled. Verify available bytes and inodes, a successful write to the application path and absence of new ENOSPC failures.\n\n",
+      "source_urls": [
+        "https://docs.aws.amazon.com/ebs/latest/userguide/recognize-expanded-volume-linux.html"
+      ],
+      "content_hash": "d9fbb1fac0b0a390fb82fae3ac5b54c2c9856e6b774095685160feab9e47f70f",
+      "similarity": 0.7614620923995972
+    },
+    {
+      "id": "STARTUP:investigation:1",
+      "runbook_id": "STARTUP",
+      "title": "Application startup and migration failures",
+      "section": "Diagnostic checks and recovery",
+      "text": "Application startup and migration failures\nScope: Services failing during initialization or schema migrations\n## Symptoms\nmigration failed; startup failed; schema version mismatch; revision not found.\n\nThese are project-authored investigation notes, not an official diagnosis. Use the supplied logs to establish observed symptoms and cite their original line identifiers. Treat configuration changes, impact and the exact root cause as unknown unless evidence supports them. This runbook suggests checks; CloudLens never executes changes to the affected system.\n\n\n## Diagnostic checks\nIdentify the first failing startup or migration step and preserve its trace. Compare deployed application version, migration files and current database revision. Confirm database reachability and access before investigating schema changes. Inspect whether another migration is active. A failed migration does not establish that a database rollback is safe. Collect the exact revision and failure details without exposing connection credentials.\n\n\n## Missing evidence\nCollect surrounding application logs, relevant deployment configuration, dependency-side evidence and a known-good comparison. Preserve timestamps when present and label absent timestamps as unknown. Record evidence that contradicts a proposed cause as well as evidence supporting it. If only a generic failure message is available, report insufficient evidence and request context rather than asserting a cause.\n\n\n## Recovery guidance\nApply only an approved migration or rollback after checking backups, compatibility and whether the failed step partially changed data. Do not automatically downgrade a database from a generic startup error. Verify the expected schema revision, successful startup and representative read/write behavior under the application\u2019s intended permissions.\n\n",
+      "source_urls": [
+        "https://alembic.sqlalchemy.org/en/latest/tutorial.html"
+      ],
+      "content_hash": "deeebb7985fb24abe691afd9431d310424c5c3a448b8d25f12365d86d85f3f70",
+      "similarity": 0.7602665424346924
+    },
+    {
+      "id": "APP-ENV:investigation:1",
+      "runbook_id": "APP-ENV",
+      "title": "Missing environment variables",
+      "section": "Diagnostic checks and recovery",
+      "text": "Missing environment variables\nScope: Application configuration absent at runtime\n## Symptoms\nKeyError environment; missing required configuration; environment variable not set.\n\nThese are project-authored investigation notes, not an official diagnosis. Use the supplied logs to establish observed symptoms and cite their original line identifiers. Treat configuration changes, impact and the exact root cause as unknown unless evidence supports them. This runbook suggests checks; CloudLens never executes changes to the affected system.\n\n\n## Diagnostic checks\nIdentify the missing variable name and which process requires it. Compare the service environment with the expected deployment configuration; a terminal environment may differ from the container environment. Check spelling, case and whether configuration was injected before process startup. Inspect the startup validation path. Redact secret values when collecting evidence. Missing configuration may prevent startup, but it does not prove that every request failed.\n\n\n## Missing evidence\nCollect surrounding application logs, relevant deployment configuration, dependency-side evidence and a known-good comparison. Preserve timestamps when present and label absent timestamps as unknown. Record evidence that contradicts a proposed cause as well as evidence supporting it. If only a generic failure message is available, report insufficient evidence and request context rather than asserting a cause.\n\n\n## Recovery guidance\nSupply the verified missing setting through the approved configuration mechanism. Keep credentials outside source control and images. Restart only under the operator\u2019s approved process if the application reads settings at startup. Verify configuration validation, readiness and a representative request without printing sensitive values.\n\n",
+      "source_urls": [
+        "https://docs.python.org/3/library/os.html#os.environ"
+      ],
+      "content_hash": "964d51b2989dd1b08700a1e058ccf60d17a8fa50b4ad77a386a4e39c47add646",
+      "similarity": 0.7538458704948425
+    }
+  ],
+  "usage": {
+    "inputTokens": 4498,
+    "outputTokens": 1103,
+    "totalTokens": 5601
+  }
+}

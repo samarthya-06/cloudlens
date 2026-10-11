@@ -1,0 +1,143 @@
+{
+  "live": true,
+  "sample": "healthy",
+  "model": "gemini-3.5-flash-lite",
+  "region": "Google Gemini Developer API",
+  "report": {
+    "title": "Application Startup and Health Check",
+    "summary": "The application started successfully and returned a 200 OK status on its health check endpoint.",
+    "analysis_status": "no_incident_detected",
+    "observed_facts": [
+      {
+        "log_refs": [
+          "L0001"
+        ],
+        "runbook_refs": [],
+        "statement": "The synthetic application startup completed at 2026-10-11T14:00:00Z."
+      },
+      {
+        "log_refs": [
+          "L0002"
+        ],
+        "runbook_refs": [],
+        "statement": "A GET /health request returned a 200 status code at 2026-10-11T14:00:01Z."
+      }
+    ],
+    "timeline": [
+      {
+        "log_refs": [
+          "L0001"
+        ],
+        "runbook_refs": [],
+        "timestamp": "2026-10-11T14:10:00Z",
+        "event": "Synthetic application startup complete."
+      },
+      {
+        "log_refs": [
+          "L0002"
+        ],
+        "runbook_refs": [],
+        "timestamp": "2026-10-11T14:10:01Z",
+        "event": "GET /health returned 200."
+      }
+    ],
+    "hypotheses": [],
+    "recommended_checks": [],
+    "recovery_guidance": [],
+    "limitations": [
+      "Logs indicate normal startup and successful health check without reporting errors."
+    ]
+  },
+  "evidence": {
+    "lines": [
+      {
+        "id": "L0001",
+        "number": 1,
+        "text": "2026-10-11T14:10:00Z INFO synthetic application startup complete",
+        "timestamp": "2026-10-11T14:10:00Z",
+        "severity": "INFO",
+        "group": 1
+      },
+      {
+        "id": "L0002",
+        "number": 2,
+        "text": "2026-10-11T14:10:01Z INFO GET /health returned 200",
+        "timestamp": "2026-10-11T14:10:01Z",
+        "severity": "INFO",
+        "group": 2
+      }
+    ],
+    "total_lines": 2,
+    "omitted_lines": 0,
+    "redactions": 0,
+    "repeated_errors": {},
+    "query": "2026-10-11T14:10:00Z INFO synthetic application startup complete\n2026-10-11T14:10:01Z INFO GET /health returned 200"
+  },
+  "retrieved_chunks": [
+    {
+      "id": "STARTUP:investigation:1",
+      "runbook_id": "STARTUP",
+      "title": "Application startup and migration failures",
+      "section": "Diagnostic checks and recovery",
+      "text": "Application startup and migration failures\nScope: Services failing during initialization or schema migrations\n## Symptoms\nmigration failed; startup failed; schema version mismatch; revision not found.\n\nThese are project-authored investigation notes, not an official diagnosis. Use the supplied logs to establish observed symptoms and cite their original line identifiers. Treat configuration changes, impact and the exact root cause as unknown unless evidence supports them. This runbook suggests checks; CloudLens never executes changes to the affected system.\n\n\n## Diagnostic checks\nIdentify the first failing startup or migration step and preserve its trace. Compare deployed application version, migration files and current database revision. Confirm database reachability and access before investigating schema changes. Inspect whether another migration is active. A failed migration does not establish that a database rollback is safe. Collect the exact revision and failure details without exposing connection credentials.\n\n\n## Missing evidence\nCollect surrounding application logs, relevant deployment configuration, dependency-side evidence and a known-good comparison. Preserve timestamps when present and label absent timestamps as unknown. Record evidence that contradicts a proposed cause as well as evidence supporting it. If only a generic failure message is available, report insufficient evidence and request context rather than asserting a cause.\n\n\n## Recovery guidance\nApply only an approved migration or rollback after checking backups, compatibility and whether the failed step partially changed data. Do not automatically downgrade a database from a generic startup error. Verify the expected schema revision, successful startup and representative read/write behavior under the application\u2019s intended permissions.\n\n",
+      "source_urls": [
+        "https://alembic.sqlalchemy.org/en/latest/tutorial.html"
+      ],
+      "content_hash": "deeebb7985fb24abe691afd9431d310424c5c3a448b8d25f12365d86d85f3f70",
+      "similarity": 0.7849858999252319
+    },
+    {
+      "id": "PROXY:investigation:1",
+      "runbook_id": "PROXY",
+      "title": "Reverse proxy gateway errors",
+      "section": "Diagnostic checks and recovery",
+      "text": "Reverse proxy gateway errors\nScope: Nginx reporting failed upstream connections or responses\n## Symptoms\n502 Bad Gateway; 504 Gateway Timeout; upstream prematurely closed connection.\n\nThese are project-authored investigation notes, not an official diagnosis. Use the supplied logs to establish observed symptoms and cite their original line identifiers. Treat configuration changes, impact and the exact root cause as unknown unless evidence supports them. This runbook suggests checks; CloudLens never executes changes to the affected system.\n\n\n## Diagnostic checks\nCompare proxy and application timestamps and request identifiers. Check the configured upstream host and port, process health and listening interface. Distinguish connection refusal, upstream closure and response timeout in proxy error logs. Inspect relevant connection and read timeout settings. A proxy 502 does not uniquely identify an application crash; incorrect upstream configuration can produce a similar symptom.\n\n\n## Missing evidence\nCollect surrounding application logs, relevant deployment configuration, dependency-side evidence and a known-good comparison. Preserve timestamps when present and label absent timestamps as unknown. Record evidence that contradicts a proposed cause as well as evidence supporting it. If only a generic failure message is available, report insufficient evidence and request context rather than asserting a cause.\n\n\n## Recovery guidance\nCorrect the confirmed upstream address or application issue using the approved deployment process. Review timeout changes against measured behavior rather than simply increasing every limit. Validate proxy configuration before reloading. Verify the proxied endpoint, application health and an end-to-end request, and monitor for recurring gateway failures.\n\n",
+      "source_urls": [
+        "https://nginx.org/en/docs/http/ngx_http_proxy_module.html"
+      ],
+      "content_hash": "3f871eb14fc5e1806040c41223ad68ddf9fcc89692301f9cd4ebfefc1e4df9e4",
+      "similarity": 0.7634496092796326
+    },
+    {
+      "id": "HTTP-TIME:investigation:1",
+      "runbook_id": "HTTP-TIME",
+      "title": "Upstream request timeouts",
+      "section": "Diagnostic checks and recovery",
+      "text": "Upstream request timeouts\nScope: Application HTTP clients exceeding configured deadlines\n## Symptoms\nReadTimeout; ConnectTimeout; upstream request timed out; 504.\n\nThese are project-authored investigation notes, not an official diagnosis. Use the supplied logs to establish observed symptoms and cite their original line identifiers. Treat configuration changes, impact and the exact root cause as unknown unless evidence supports them. This runbook suggests checks; CloudLens never executes changes to the affected system.\n\n\n## Diagnostic checks\nIdentify whether the timeout occurred while connecting, reading, writing or waiting for a connection pool slot. Compare client and upstream request IDs, timestamps and configured timeouts. Inspect upstream latency, availability and dependency metrics. Check network reachability for connection timeouts and response behavior for read timeouts. Repeated timeouts alone do not establish CPU overload, traffic volume or memory pressure. Collect metrics before ranking those explanations.\n\n\n## Missing evidence\nCollect surrounding application logs, relevant deployment configuration, dependency-side evidence and a known-good comparison. Preserve timestamps when present and label absent timestamps as unknown. Record evidence that contradicts a proposed cause as well as evidence supporting it. If only a generic failure message is available, report insufficient evidence and request context rather than asserting a cause.\n\n\n## Recovery guidance\nAddress a verified upstream or connectivity issue through its owner. Adjust deadlines only after measuring normal latency and reviewing user impact. Bound retries and use backoff for transient failures; avoid multiplying load with unlimited retry loops. Verify successful requests, acceptable latency and fewer timeout errors under a representative workload.\n\n",
+      "source_urls": [
+        "https://www.python-httpx.org/advanced/timeouts/"
+      ],
+      "content_hash": "acf0c80f69bd390f5b684531da1209ddf46222eacfe8c25ad9a01f54e88cbc60",
+      "similarity": 0.7609878778457642
+    },
+    {
+      "id": "APP-ENV:investigation:1",
+      "runbook_id": "APP-ENV",
+      "title": "Missing environment variables",
+      "section": "Diagnostic checks and recovery",
+      "text": "Missing environment variables\nScope: Application configuration absent at runtime\n## Symptoms\nKeyError environment; missing required configuration; environment variable not set.\n\nThese are project-authored investigation notes, not an official diagnosis. Use the supplied logs to establish observed symptoms and cite their original line identifiers. Treat configuration changes, impact and the exact root cause as unknown unless evidence supports them. This runbook suggests checks; CloudLens never executes changes to the affected system.\n\n\n## Diagnostic checks\nIdentify the missing variable name and which process requires it. Compare the service environment with the expected deployment configuration; a terminal environment may differ from the container environment. Check spelling, case and whether configuration was injected before process startup. Inspect the startup validation path. Redact secret values when collecting evidence. Missing configuration may prevent startup, but it does not prove that every request failed.\n\n\n## Missing evidence\nCollect surrounding application logs, relevant deployment configuration, dependency-side evidence and a known-good comparison. Preserve timestamps when present and label absent timestamps as unknown. Record evidence that contradicts a proposed cause as well as evidence supporting it. If only a generic failure message is available, report insufficient evidence and request context rather than asserting a cause.\n\n\n## Recovery guidance\nSupply the verified missing setting through the approved configuration mechanism. Keep credentials outside source control and images. Restart only under the operator\u2019s approved process if the application reads settings at startup. Verify configuration validation, readiness and a representative request without printing sensitive values.\n\n",
+      "source_urls": [
+        "https://docs.python.org/3/library/os.html#os.environ"
+      ],
+      "content_hash": "964d51b2989dd1b08700a1e058ccf60d17a8fa50b4ad77a386a4e39c47add646",
+      "similarity": 0.7608526945114136
+    },
+    {
+      "id": "MEMORY:investigation:1",
+      "runbook_id": "MEMORY",
+      "title": "Memory exhaustion",
+      "section": "Diagnostic checks and recovery",
+      "text": "Memory exhaustion\nScope: Processes terminated or allocation failing under memory limits\n## Symptoms\nOOMKilled; out of memory; MemoryError; allocation failed.\n\nThese are project-authored investigation notes, not an official diagnosis. Use the supplied logs to establish observed symptoms and cite their original line identifiers. Treat configuration changes, impact and the exact root cause as unknown unless evidence supports them. This runbook suggests checks; CloudLens never executes changes to the affected system.\n\n\n## Diagnostic checks\nCorrelate application errors with container exit state, kernel messages and memory usage near the event. Inspect configured container and host limits. Distinguish an application allocation failure from a kernel OOM termination. Compare workload and memory trends; a single termination does not establish a memory leak. Check whether another process consumed host capacity. Gather a safe diagnostic profile without retaining customer data or secrets.\n\n\n## Missing evidence\nCollect surrounding application logs, relevant deployment configuration, dependency-side evidence and a known-good comparison. Preserve timestamps when present and label absent timestamps as unknown. Record evidence that contradicts a proposed cause as well as evidence supporting it. If only a generic failure message is available, report insufficient evidence and request context rather than asserting a cause.\n\n\n## Recovery guidance\nReduce verified workload pressure or adjust an approved resource limit within available host capacity. Investigate retained allocations before asserting a leak. Any restart requires the operator\u2019s approval and may only restore service temporarily. Verify stable memory usage, no additional OOM events and normal request behavior during a representative run.\n\n",
+      "source_urls": [
+        "https://docs.docker.com/engine/containers/resource_constraints/"
+      ],
+      "content_hash": "f509430dfea4966c5f36391478bd7f60e8f1e6699eabd920aa07a31e183593c7",
+      "similarity": 0.7596526145935059
+    }
+  ],
+  "usage": {
+    "inputTokens": 4326,
+    "outputTokens": 284,
+    "totalTokens": 4610
+  }
+}

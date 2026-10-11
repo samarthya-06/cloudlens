@@ -1,0 +1,268 @@
+{
+  "live": true,
+  "sample": "timeout",
+  "model": "gemini-3.5-flash-lite",
+  "region": "Google Gemini Developer API",
+  "report": {
+    "title": "Catalog Service Upstream Request Timeout",
+    "summary": "An HTTP GET request to /catalog started at 2026-10-11T13:28:00Z encountered an upstream request timeout after 30 seconds (httpx.ReadTimeout: waiting for catalog service), resulting in a 504 response status code. A subsequent request also experienced an upstream request timeout after 30 seconds.",
+    "analysis_status": "incident_detected",
+    "observed_facts": [
+      {
+        "log_refs": [
+          "L0001"
+        ],
+        "runbook_refs": [],
+        "statement": "An HTTP GET request to /catalog started at 2026-10-11T13:28:00Z."
+      },
+      {
+        "log_refs": [
+          "L0002",
+          "L0003"
+        ],
+        "runbook_refs": [],
+        "statement": "An upstream request timed out after 30 seconds with an httpx.ReadTimeout waiting for the catalog service."
+      },
+      {
+        "log_refs": [
+          "L0004"
+        ],
+        "runbook_refs": [],
+        "statement": "The GET /catalog request returned a 504 status code at 2026-10-11T13:28:31Z."
+      },
+      {
+        "log_refs": [
+          "L0005"
+        ],
+        "runbook_refs": [],
+        "statement": "Another upstream request timed out after 30 seconds at 2026-10-11T13:29:01Z."
+      }
+    ],
+    "timeline": [
+      {
+        "log_refs": [
+          "L0001"
+        ],
+        "runbook_refs": [],
+        "timestamp": "2026-10-11T13:28:00Z",
+        "event": "GET /catalog started"
+      },
+      {
+        "log_refs": [
+          "L0002",
+          "L0003"
+        ],
+        "runbook_refs": [],
+        "timestamp": "2026-10-11T13:28:30Z",
+        "event": "Upstream request timed out after 30s with httpx.ReadTimeout waiting for catalog service"
+      },
+      {
+        "log_refs": [
+          "L0004"
+        ],
+        "runbook_refs": [],
+        "timestamp": "2026-10-11T13:28:31Z",
+        "event": "GET /catalog returned 504"
+      },
+      {
+        "log_refs": [
+          "L0005"
+        ],
+        "runbook_refs": [],
+        "timestamp": "2026-10-11T13:29:01Z",
+        "event": "Upstream request timed out after 30s"
+      }
+    ],
+    "hypotheses": [
+      {
+        "log_refs": [
+          "L0002",
+          "L0003",
+          "L0004",
+          "L0005"
+        ],
+        "runbook_refs": [
+          "HTTP-TIME:investigation:1"
+        ],
+        "possible_cause": "The catalog service dependency is experiencing high latency or performance degradation, causing HTTP client requests to exceed the configured 30-second read timeout.",
+        "rank": "leading",
+        "evidence_against": null,
+        "missing_evidence": [
+          "Upstream dependency metrics and latency traces",
+          "Surrounding application logs and dependency-side error logs",
+          "Deployment configuration for client timeouts"
+        ]
+      }
+    ],
+    "recommended_checks": [
+      {
+        "log_refs": [
+          "L0002",
+          "L0005"
+        ],
+        "runbook_refs": [
+          "HTTP-TIME:investigation:1"
+        ],
+        "action": "Inspect upstream latency, availability, and dependency metrics for the catalog service.",
+        "why": "To determine whether the catalog service is responding slowly or failing completely.",
+        "expected_observation": "Elevated response times or resource exhaustion metrics on the catalog service dependency."
+      },
+      {
+        "log_refs": [
+          "L0002",
+          "L0003"
+        ],
+        "runbook_refs": [
+          "HTTP-TIME:investigation:1"
+        ],
+        "action": "Compare client and upstream request IDs, timestamps, and configured timeouts.",
+        "why": "To verify if the 30-second deadline is being breached due to slow downstream queries or insufficient timeout configuration.",
+        "expected_observation": "Confirmation that request duration matches or exceeds the configured client timeout threshold."
+      }
+    ],
+    "recovery_guidance": [
+      {
+        "log_refs": [
+          "L0002",
+          "L0004",
+          "L0005"
+        ],
+        "runbook_refs": [
+          "HTTP-TIME:investigation:1"
+        ],
+        "proposed_action": "Address the verified upstream or connectivity issue through its owner, and adjust deadlines only after measuring normal latency and reviewing user impact.",
+        "prerequisites": [
+          "Measured normal latency under representative workload",
+          "Review of user impact"
+        ],
+        "verification_steps": [
+          "Verify successful requests",
+          "Confirm acceptable latency",
+          "Monitor for fewer timeout errors under a representative workload"
+        ]
+      }
+    ],
+    "limitations": [
+      "Repeated timeouts alone do not establish CPU overload, traffic volume, or memory pressure.",
+      "Upstream root causes and exact dependency health cannot be fully determined without dependency-side evidence."
+    ]
+  },
+  "evidence": {
+    "lines": [
+      {
+        "id": "L0001",
+        "number": 1,
+        "text": "2026-10-11T13:28:00Z INFO GET /catalog started",
+        "timestamp": "2026-10-11T13:28:00Z",
+        "severity": "INFO",
+        "group": 1
+      },
+      {
+        "id": "L0002",
+        "number": 2,
+        "text": "2026-10-11T13:28:30Z ERROR upstream request timed out after 30s",
+        "timestamp": "2026-10-11T13:28:30Z",
+        "severity": "ERROR",
+        "group": 2
+      },
+      {
+        "id": "L0003",
+        "number": 3,
+        "text": "    httpx.ReadTimeout: waiting for catalog service",
+        "timestamp": null,
+        "severity": "UNKNOWN",
+        "group": 2
+      },
+      {
+        "id": "L0004",
+        "number": 4,
+        "text": "2026-10-11T13:28:31Z WARN GET /catalog returned 504",
+        "timestamp": "2026-10-11T13:28:31Z",
+        "severity": "WARN",
+        "group": 3
+      },
+      {
+        "id": "L0005",
+        "number": 5,
+        "text": "2026-10-11T13:29:01Z ERROR upstream request timed out after 30s",
+        "timestamp": "2026-10-11T13:29:01Z",
+        "severity": "ERROR",
+        "group": 4
+      }
+    ],
+    "total_lines": 5,
+    "omitted_lines": 0,
+    "redactions": 0,
+    "repeated_errors": {
+      "ERROR upstream request timed out after 30s": 2
+    },
+    "query": "ERROR upstream request timed out after 30s\nhttpx.ReadTimeout: waiting for catalog service\nWARN GET /catalog returned #"
+  },
+  "retrieved_chunks": [
+    {
+      "id": "HTTP-TIME:investigation:1",
+      "runbook_id": "HTTP-TIME",
+      "title": "Upstream request timeouts",
+      "section": "Diagnostic checks and recovery",
+      "text": "Upstream request timeouts\nScope: Application HTTP clients exceeding configured deadlines\n## Symptoms\nReadTimeout; ConnectTimeout; upstream request timed out; 504.\n\nThese are project-authored investigation notes, not an official diagnosis. Use the supplied logs to establish observed symptoms and cite their original line identifiers. Treat configuration changes, impact and the exact root cause as unknown unless evidence supports them. This runbook suggests checks; CloudLens never executes changes to the affected system.\n\n\n## Diagnostic checks\nIdentify whether the timeout occurred while connecting, reading, writing or waiting for a connection pool slot. Compare client and upstream request IDs, timestamps and configured timeouts. Inspect upstream latency, availability and dependency metrics. Check network reachability for connection timeouts and response behavior for read timeouts. Repeated timeouts alone do not establish CPU overload, traffic volume or memory pressure. Collect metrics before ranking those explanations.\n\n\n## Missing evidence\nCollect surrounding application logs, relevant deployment configuration, dependency-side evidence and a known-good comparison. Preserve timestamps when present and label absent timestamps as unknown. Record evidence that contradicts a proposed cause as well as evidence supporting it. If only a generic failure message is available, report insufficient evidence and request context rather than asserting a cause.\n\n\n## Recovery guidance\nAddress a verified upstream or connectivity issue through its owner. Adjust deadlines only after measuring normal latency and reviewing user impact. Bound retries and use backoff for transient failures; avoid multiplying load with unlimited retry loops. Verify successful requests, acceptable latency and fewer timeout errors under a representative workload.\n\n",
+      "source_urls": [
+        "https://www.python-httpx.org/advanced/timeouts/"
+      ],
+      "content_hash": "acf0c80f69bd390f5b684531da1209ddf46222eacfe8c25ad9a01f54e88cbc60",
+      "similarity": 0.8511937260627747
+    },
+    {
+      "id": "PROXY:investigation:1",
+      "runbook_id": "PROXY",
+      "title": "Reverse proxy gateway errors",
+      "section": "Diagnostic checks and recovery",
+      "text": "Reverse proxy gateway errors\nScope: Nginx reporting failed upstream connections or responses\n## Symptoms\n502 Bad Gateway; 504 Gateway Timeout; upstream prematurely closed connection.\n\nThese are project-authored investigation notes, not an official diagnosis. Use the supplied logs to establish observed symptoms and cite their original line identifiers. Treat configuration changes, impact and the exact root cause as unknown unless evidence supports them. This runbook suggests checks; CloudLens never executes changes to the affected system.\n\n\n## Diagnostic checks\nCompare proxy and application timestamps and request identifiers. Check the configured upstream host and port, process health and listening interface. Distinguish connection refusal, upstream closure and response timeout in proxy error logs. Inspect relevant connection and read timeout settings. A proxy 502 does not uniquely identify an application crash; incorrect upstream configuration can produce a similar symptom.\n\n\n## Missing evidence\nCollect surrounding application logs, relevant deployment configuration, dependency-side evidence and a known-good comparison. Preserve timestamps when present and label absent timestamps as unknown. Record evidence that contradicts a proposed cause as well as evidence supporting it. If only a generic failure message is available, report insufficient evidence and request context rather than asserting a cause.\n\n\n## Recovery guidance\nCorrect the confirmed upstream address or application issue using the approved deployment process. Review timeout changes against measured behavior rather than simply increasing every limit. Validate proxy configuration before reloading. Verify the proxied endpoint, application health and an end-to-end request, and monitor for recurring gateway failures.\n\n",
+      "source_urls": [
+        "https://nginx.org/en/docs/http/ngx_http_proxy_module.html"
+      ],
+      "content_hash": "3f871eb14fc5e1806040c41223ad68ddf9fcc89692301f9cd4ebfefc1e4df9e4",
+      "similarity": 0.8302807211875916
+    },
+    {
+      "id": "THROTTLE:investigation:1",
+      "runbook_id": "THROTTLE",
+      "title": "External API throttling",
+      "section": "Diagnostic checks and recovery",
+      "text": "External API throttling\nScope: Dependencies limiting request rates or returning transient overload\n## Symptoms\nTooManyRequests; ThrottlingException; 429; rate limit exceeded.\n\nThese are project-authored investigation notes, not an official diagnosis. Use the supplied logs to establish observed symptoms and cite their original line identifiers. Treat configuration changes, impact and the exact root cause as unknown unless evidence supports them. This runbook suggests checks; CloudLens never executes changes to the affected system.\n\n\n## Diagnostic checks\nIdentify the dependency, operation and throttling response. Inspect retry headers where provided, SDK retry configuration and total request attempts. Compare concurrency and request rates against documented limits. Separate throttling from authentication failures and persistent validation errors. Retrying all errors indiscriminately can amplify load. The supplied logs may show throttling without establishing how much traffic caused it.\n\n\n## Missing evidence\nCollect surrounding application logs, relevant deployment configuration, dependency-side evidence and a known-good comparison. Preserve timestamps when present and label absent timestamps as unknown. Record evidence that contradicts a proposed cause as well as evidence supporting it. If only a generic failure message is available, report insufficient evidence and request context rather than asserting a cause.\n\n\n## Recovery guidance\nReduce verified concurrency or request frequency and use bounded retries with backoff and jitter. Cache suitable repeated work. Request quota changes only through the resource owner when justified. Verify that successful calls recover while total attempts remain bounded, and retain a clear failure message when the retry budget is exhausted.\n\n",
+      "source_urls": [
+        "https://docs.aws.amazon.com/sdkref/latest/guide/feature-retry-behavior.html"
+      ],
+      "content_hash": "a983828bb72240055b12cb8aed1b018f947dfebc039afff5a018a814fd01c200",
+      "similarity": 0.7945927381515503
+    },
+    {
+      "id": "DB-NET:investigation:1",
+      "runbook_id": "DB-NET",
+      "title": "Database reachability failures",
+      "section": "Diagnostic checks and recovery",
+      "text": "Database reachability failures\nScope: Database connections refused, unreachable or timing out\n## Symptoms\nconnection refused; connection timed out; could not translate host name.\n\nThese are project-authored investigation notes, not an official diagnosis. Use the supplied logs to establish observed symptoms and cite their original line identifiers. Treat configuration changes, impact and the exact root cause as unknown unless evidence supports them. This runbook suggests checks; CloudLens never executes changes to the affected system.\n\n\n## Diagnostic checks\nDistinguish DNS failure, connection refusal, network timeout and database authentication rejection. Confirm the intended endpoint and port from configuration without showing credentials. Test DNS and TCP reachability from the same network as the application. Inspect database availability, routing, security groups and network ACLs with the resource owner. Compare timestamps with maintenance events. A refused connection and a timed-out connection suggest different checks; neither proves a security group fault.\n\n\n## Missing evidence\nCollect surrounding application logs, relevant deployment configuration, dependency-side evidence and a known-good comparison. Preserve timestamps when present and label absent timestamps as unknown. Record evidence that contradicts a proposed cause as well as evidence supporting it. If only a generic failure message is available, report insufficient evidence and request context rather than asserting a cause.\n\n\n## Recovery guidance\nRestore only the verified endpoint, listener or network configuration using the approved change process. Avoid broad public ingress rules as a shortcut. Verify DNS resolution, an application-side TCP connection and a database query. Record which controlled change improved reachability and keep a rollback plan.\n\n",
+      "source_urls": [
+        "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Troubleshooting.html"
+      ],
+      "content_hash": "e2d9717d720eadf7198b500415b21a019e399bcb6b2f6baedc69130948fdafc2",
+      "similarity": 0.7837553024291992
+    },
+    {
+      "id": "STARTUP:investigation:1",
+      "runbook_id": "STARTUP",
+      "title": "Application startup and migration failures",
+      "section": "Diagnostic checks and recovery",
+      "text": "Application startup and migration failures\nScope: Services failing during initialization or schema migrations\n## Symptoms\nmigration failed; startup failed; schema version mismatch; revision not found.\n\nThese are project-authored investigation notes, not an official diagnosis. Use the supplied logs to establish observed symptoms and cite their original line identifiers. Treat configuration changes, impact and the exact root cause as unknown unless evidence supports them. This runbook suggests checks; CloudLens never executes changes to the affected system.\n\n\n## Diagnostic checks\nIdentify the first failing startup or migration step and preserve its trace. Compare deployed application version, migration files and current database revision. Confirm database reachability and access before investigating schema changes. Inspect whether another migration is active. A failed migration does not establish that a database rollback is safe. Collect the exact revision and failure details without exposing connection credentials.\n\n\n## Missing evidence\nCollect surrounding application logs, relevant deployment configuration, dependency-side evidence and a known-good comparison. Preserve timestamps when present and label absent timestamps as unknown. Record evidence that contradicts a proposed cause as well as evidence supporting it. If only a generic failure message is available, report insufficient evidence and request context rather than asserting a cause.\n\n\n## Recovery guidance\nApply only an approved migration or rollback after checking backups, compatibility and whether the failed step partially changed data. Do not automatically downgrade a database from a generic startup error. Verify the expected schema revision, successful startup and representative read/write behavior under the application\u2019s intended permissions.\n\n",
+      "source_urls": [
+        "https://alembic.sqlalchemy.org/en/latest/tutorial.html"
+      ],
+      "content_hash": "deeebb7985fb24abe691afd9431d310424c5c3a448b8d25f12365d86d85f3f70",
+      "similarity": 0.7803000211715698
+    }
+  ],
+  "usage": {
+    "inputTokens": 4553,
+    "outputTokens": 1243,
+    "totalTokens": 5796
+  }
+}

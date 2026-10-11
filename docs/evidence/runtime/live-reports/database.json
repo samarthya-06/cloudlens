@@ -1,0 +1,318 @@
+{
+  "live": true,
+  "sample": "database",
+  "model": "gemini-3.5-flash-lite",
+  "region": "Google Gemini Developer API",
+  "report": {
+    "title": "Database Authentication Failure After Deployment",
+    "summary": "An application deployment v1.8 completed at 2026-10-11T14:02:00Z, followed by connection attempts and repeated password authentication failures for user app_user, resulting in a 503 status on /health.",
+    "analysis_status": "incident_detected",
+    "observed_facts": [
+      {
+        "log_refs": [
+          "L0001"
+        ],
+        "runbook_refs": [],
+        "statement": "Deployment v1.8 completed at 2026-10-11T14:02:00Z."
+      },
+      {
+        "log_refs": [
+          "L0002",
+          "L0003"
+        ],
+        "runbook_refs": [],
+        "statement": "Application attempted connection as user app_user with redacted password at 2026-10-11T14:02:01Z."
+      },
+      {
+        "log_refs": [
+          "L0004",
+          "L0006",
+          "L0007"
+        ],
+        "runbook_refs": [],
+        "statement": "Password authentication failed for user app_user with psycopg.OperationalError occurring at 2026-10-11T14:02:03Z and repeated at 2026-10-11T14:02:05Z."
+      },
+      {
+        "log_refs": [
+          "L0008"
+        ],
+        "runbook_refs": [],
+        "statement": "The /health endpoint returned 503 at 2026-10-11T14:02:05Z."
+      }
+    ],
+    "timeline": [
+      {
+        "log_refs": [
+          "L0001"
+        ],
+        "runbook_refs": [],
+        "timestamp": "2026-10-11T14:02:00Z",
+        "event": "Deploy v1.8 completed"
+      },
+      {
+        "log_refs": [
+          "L0002",
+          "L0003"
+        ],
+        "runbook_refs": [],
+        "timestamp": "2026-10-11T14:02:01Z",
+        "event": "Connecting as app_user with password=[REDACTED]"
+      },
+      {
+        "log_refs": [
+          "L0004",
+          "L0005",
+          "L0006"
+        ],
+        "runbook_refs": [],
+        "timestamp": "2026-10-11T14:02:03Z",
+        "event": "Password authentication failed for user app_user, raising psycopg.OperationalError"
+      },
+      {
+        "log_refs": [
+          "L0007"
+        ],
+        "runbook_refs": [],
+        "timestamp": "2026-10-11T14:02:05Z",
+        "event": "Password authentication failed for user app_user repeated"
+      },
+      {
+        "log_refs": [
+          "L0008"
+        ],
+        "runbook_refs": [],
+        "timestamp": "2026-10-11T14:02:05Z",
+        "event": "/health returned 503"
+      }
+    ],
+    "hypotheses": [
+      {
+        "log_refs": [
+          "L0001",
+          "L0004",
+          "L0006",
+          "L0007"
+        ],
+        "runbook_refs": [
+          "DB-AUTH:investigation:1"
+        ],
+        "possible_cause": "The deployment of version v1.8 introduced a configuration discrepancy regarding database credentials or secret version references for user app_user.",
+        "rank": "leading",
+        "evidence_against": null,
+        "missing_evidence": [
+          "Deployed database username, host, and secret version identifiers",
+          "Server-side PostgreSQL authentication logs"
+        ]
+      },
+      {
+        "log_refs": [
+          "L0004",
+          "L0006",
+          "L0007"
+        ],
+        "runbook_refs": [
+          "DB-AUTH:investigation:1"
+        ],
+        "possible_cause": "Server-side host authentication rules (pg_hba.conf) or role permissions were modified or revoked for user app_user.",
+        "rank": "alternative",
+        "evidence_against": null,
+        "missing_evidence": [
+          "Server-side pg_hba.conf rules",
+          "Database role login privilege status"
+        ]
+      }
+    ],
+    "recommended_checks": [
+      {
+        "log_refs": [
+          "L0001",
+          "L0004"
+        ],
+        "runbook_refs": [
+          "DB-AUTH:investigation:1"
+        ],
+        "action": "Compare deployed database username, host, database, and credential source in version v1.8 against approved configuration.",
+        "why": "To determine if a configuration discrepancy was introduced during deployment.",
+        "expected_observation": "Confirm whether the application is referencing the expected secret version and connection parameters."
+      },
+      {
+        "log_refs": [
+          "L0004"
+        ],
+        "runbook_refs": [
+          "DB-AUTH:investigation:1"
+        ],
+        "action": "Inspect secret version identifiers without displaying secret values.",
+        "why": "To verify if an outdated or incorrect credential was injected during deployment.",
+        "expected_observation": "The secret identifier matches or mismatches the active database credential."
+      }
+    ],
+    "recovery_guidance": [
+      {
+        "log_refs": [
+          "L0004",
+          "L0008"
+        ],
+        "runbook_refs": [
+          "DB-AUTH:investigation:1"
+        ],
+        "proposed_action": "Correct a confirmed configuration discrepancy through the approved secret or deployment process.",
+        "prerequisites": [
+          "Approved configuration or secret",
+          "Deployment access"
+        ],
+        "verification_steps": [
+          "Verify a fresh connection from the application environment",
+          "Confirm a successful health check returning 200",
+          "Verify the absence of repeated authentication failures in logs"
+        ]
+      }
+    ],
+    "limitations": [
+      "Configuration changes and the exact root cause remain unknown without inspecting deployment manifests and server-side logs.",
+      "A password authentication error does not establish which specific configuration value is incorrect."
+    ]
+  },
+  "evidence": {
+    "lines": [
+      {
+        "id": "L0001",
+        "number": 1,
+        "text": "2026-10-11T14:02:00Z INFO deploy v1.8 completed",
+        "timestamp": "2026-10-11T14:02:00Z",
+        "severity": "INFO",
+        "group": 1
+      },
+      {
+        "id": "L0002",
+        "number": 2,
+        "text": "2026-10-11T14:02:01Z INFO connecting as app_user",
+        "timestamp": "2026-10-11T14:02:01Z",
+        "severity": "INFO",
+        "group": 2
+      },
+      {
+        "id": "L0003",
+        "number": 3,
+        "text": "2026-10-11T14:02:01Z INFO password=[REDACTED]",
+        "timestamp": "2026-10-11T14:02:01Z",
+        "severity": "INFO",
+        "group": 3
+      },
+      {
+        "id": "L0004",
+        "number": 4,
+        "text": "2026-10-11T14:02:03Z ERROR password authentication failed for user app_user",
+        "timestamp": "2026-10-11T14:02:03Z",
+        "severity": "ERROR",
+        "group": 4
+      },
+      {
+        "id": "L0005",
+        "number": 5,
+        "text": "Traceback (most recent call last):",
+        "timestamp": null,
+        "severity": "UNKNOWN",
+        "group": 4
+      },
+      {
+        "id": "L0006",
+        "number": 6,
+        "text": "    psycopg.OperationalError: authentication failed",
+        "timestamp": null,
+        "severity": "UNKNOWN",
+        "group": 4
+      },
+      {
+        "id": "L0007",
+        "number": 7,
+        "text": "2026-10-11T14:02:05Z ERROR password authentication failed for user app_user",
+        "timestamp": "2026-10-11T14:02:05Z",
+        "severity": "ERROR",
+        "group": 5
+      },
+      {
+        "id": "L0008",
+        "number": 8,
+        "text": "2026-10-11T14:02:05Z WARN /health returned 503",
+        "timestamp": "2026-10-11T14:02:05Z",
+        "severity": "WARN",
+        "group": 6
+      }
+    ],
+    "total_lines": 8,
+    "omitted_lines": 0,
+    "redactions": 1,
+    "repeated_errors": {
+      "ERROR password authentication failed for user app_user": 2
+    },
+    "query": "ERROR password authentication failed for user app_user\npsycopg.OperationalError: authentication failed\nWARN /health returned #"
+  },
+  "retrieved_chunks": [
+    {
+      "id": "DB-AUTH:investigation:1",
+      "runbook_id": "DB-AUTH",
+      "title": "Database authentication failures",
+      "section": "Diagnostic checks and recovery",
+      "text": "Database authentication failures\nScope: PostgreSQL application login rejected\n## Symptoms\npassword authentication failed; authentication failed for user; role login rejected.\n\nThese are project-authored investigation notes, not an official diagnosis. Use the supplied logs to establish observed symptoms and cite their original line identifiers. Treat configuration changes, impact and the exact root cause as unknown unless evidence supports them. This runbook suggests checks; CloudLens never executes changes to the affected system.\n\n\n## Diagnostic checks\nCompare the deployed database username, host, database and credential source against the approved configuration. Inspect secret version identifiers without displaying secret values. Ask the database owner for the server-side authentication rejection and the applicable host authentication rule. Check whether the role can log in and whether a recent deployment changed its environment. A password authentication error does not establish which configuration value is wrong.\n\n\n## Missing evidence\nCollect surrounding application logs, relevant deployment configuration, dependency-side evidence and a known-good comparison. Preserve timestamps when present and label absent timestamps as unknown. Record evidence that contradicts a proposed cause as well as evidence supporting it. If only a generic failure message is available, report insufficient evidence and request context rather than asserting a cause.\n\n\n## Recovery guidance\nCorrect a confirmed configuration discrepancy through the approved secret or deployment process. Do not reset passwords merely because a client login failed. If an authentication policy is the cause, obtain approval before changing it. Verify a fresh connection from the application environment, a successful health check and absence of repeated authentication failures.\n\n",
+      "source_urls": [
+        "https://www.postgresql.org/docs/current/client-authentication.html"
+      ],
+      "content_hash": "c18f9b87d1a1ba0482f2ae3d4bad928c6ac612275711317e93de4ec4d38a2059",
+      "similarity": 0.8710396885871887
+    },
+    {
+      "id": "STARTUP:investigation:1",
+      "runbook_id": "STARTUP",
+      "title": "Application startup and migration failures",
+      "section": "Diagnostic checks and recovery",
+      "text": "Application startup and migration failures\nScope: Services failing during initialization or schema migrations\n## Symptoms\nmigration failed; startup failed; schema version mismatch; revision not found.\n\nThese are project-authored investigation notes, not an official diagnosis. Use the supplied logs to establish observed symptoms and cite their original line identifiers. Treat configuration changes, impact and the exact root cause as unknown unless evidence supports them. This runbook suggests checks; CloudLens never executes changes to the affected system.\n\n\n## Diagnostic checks\nIdentify the first failing startup or migration step and preserve its trace. Compare deployed application version, migration files and current database revision. Confirm database reachability and access before investigating schema changes. Inspect whether another migration is active. A failed migration does not establish that a database rollback is safe. Collect the exact revision and failure details without exposing connection credentials.\n\n\n## Missing evidence\nCollect surrounding application logs, relevant deployment configuration, dependency-side evidence and a known-good comparison. Preserve timestamps when present and label absent timestamps as unknown. Record evidence that contradicts a proposed cause as well as evidence supporting it. If only a generic failure message is available, report insufficient evidence and request context rather than asserting a cause.\n\n\n## Recovery guidance\nApply only an approved migration or rollback after checking backups, compatibility and whether the failed step partially changed data. Do not automatically downgrade a database from a generic startup error. Verify the expected schema revision, successful startup and representative read/write behavior under the application\u2019s intended permissions.\n\n",
+      "source_urls": [
+        "https://alembic.sqlalchemy.org/en/latest/tutorial.html"
+      ],
+      "content_hash": "deeebb7985fb24abe691afd9431d310424c5c3a448b8d25f12365d86d85f3f70",
+      "similarity": 0.8033608794212341
+    },
+    {
+      "id": "DB-NET:investigation:1",
+      "runbook_id": "DB-NET",
+      "title": "Database reachability failures",
+      "section": "Diagnostic checks and recovery",
+      "text": "Database reachability failures\nScope: Database connections refused, unreachable or timing out\n## Symptoms\nconnection refused; connection timed out; could not translate host name.\n\nThese are project-authored investigation notes, not an official diagnosis. Use the supplied logs to establish observed symptoms and cite their original line identifiers. Treat configuration changes, impact and the exact root cause as unknown unless evidence supports them. This runbook suggests checks; CloudLens never executes changes to the affected system.\n\n\n## Diagnostic checks\nDistinguish DNS failure, connection refusal, network timeout and database authentication rejection. Confirm the intended endpoint and port from configuration without showing credentials. Test DNS and TCP reachability from the same network as the application. Inspect database availability, routing, security groups and network ACLs with the resource owner. Compare timestamps with maintenance events. A refused connection and a timed-out connection suggest different checks; neither proves a security group fault.\n\n\n## Missing evidence\nCollect surrounding application logs, relevant deployment configuration, dependency-side evidence and a known-good comparison. Preserve timestamps when present and label absent timestamps as unknown. Record evidence that contradicts a proposed cause as well as evidence supporting it. If only a generic failure message is available, report insufficient evidence and request context rather than asserting a cause.\n\n\n## Recovery guidance\nRestore only the verified endpoint, listener or network configuration using the approved change process. Avoid broad public ingress rules as a shortcut. Verify DNS resolution, an application-side TCP connection and a database query. Record which controlled change improved reachability and keep a rollback plan.\n\n",
+      "source_urls": [
+        "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Troubleshooting.html"
+      ],
+      "content_hash": "e2d9717d720eadf7198b500415b21a019e399bcb6b2f6baedc69130948fdafc2",
+      "similarity": 0.787225067615509
+    },
+    {
+      "id": "PROXY:investigation:1",
+      "runbook_id": "PROXY",
+      "title": "Reverse proxy gateway errors",
+      "section": "Diagnostic checks and recovery",
+      "text": "Reverse proxy gateway errors\nScope: Nginx reporting failed upstream connections or responses\n## Symptoms\n502 Bad Gateway; 504 Gateway Timeout; upstream prematurely closed connection.\n\nThese are project-authored investigation notes, not an official diagnosis. Use the supplied logs to establish observed symptoms and cite their original line identifiers. Treat configuration changes, impact and the exact root cause as unknown unless evidence supports them. This runbook suggests checks; CloudLens never executes changes to the affected system.\n\n\n## Diagnostic checks\nCompare proxy and application timestamps and request identifiers. Check the configured upstream host and port, process health and listening interface. Distinguish connection refusal, upstream closure and response timeout in proxy error logs. Inspect relevant connection and read timeout settings. A proxy 502 does not uniquely identify an application crash; incorrect upstream configuration can produce a similar symptom.\n\n\n## Missing evidence\nCollect surrounding application logs, relevant deployment configuration, dependency-side evidence and a known-good comparison. Preserve timestamps when present and label absent timestamps as unknown. Record evidence that contradicts a proposed cause as well as evidence supporting it. If only a generic failure message is available, report insufficient evidence and request context rather than asserting a cause.\n\n\n## Recovery guidance\nCorrect the confirmed upstream address or application issue using the approved deployment process. Review timeout changes against measured behavior rather than simply increasing every limit. Validate proxy configuration before reloading. Verify the proxied endpoint, application health and an end-to-end request, and monitor for recurring gateway failures.\n\n",
+      "source_urls": [
+        "https://nginx.org/en/docs/http/ngx_http_proxy_module.html"
+      ],
+      "content_hash": "3f871eb14fc5e1806040c41223ad68ddf9fcc89692301f9cd4ebfefc1e4df9e4",
+      "similarity": 0.7848520278930664
+    },
+    {
+      "id": "S3-DENY:investigation:1",
+      "runbook_id": "S3-DENY",
+      "title": "S3 access denial",
+      "section": "Diagnostic checks and recovery",
+      "text": "S3 access denial\nScope: S3 API requests returning AccessDenied\n## Symptoms\nAccessDenied; PutObject denied; S3 403 Forbidden.\n\nThese are project-authored investigation notes, not an official diagnosis. Use the supplied logs to establish observed symptoms and cite their original line identifiers. Treat configuration changes, impact and the exact root cause as unknown unless evidence supports them. This runbook suggests checks; CloudLens never executes changes to the affected system.\n\n\n## Diagnostic checks\nConfirm the operation, bucket, object prefix and actual calling IAM role. Inspect relevant identity policy, bucket policy, organization controls and permission boundaries. An explicit deny can override an allow. Check encryption requirements and KMS permissions when encryption uses a customer-managed key. Review object ownership and endpoint policy where applicable. The error alone does not identify which policy denied the request. Do not infer that adding s3:* is necessary.\n\n\n## Missing evidence\nCollect surrounding application logs, relevant deployment configuration, dependency-side evidence and a known-good comparison. Preserve timestamps when present and label absent timestamps as unknown. Record evidence that contradicts a proposed cause as well as evidence supporting it. If only a generic failure message is available, report insufficient evidence and request context rather than asserting a cause.\n\n\n## Recovery guidance\nHave the resource owner correct only the confirmed policy or encryption discrepancy with least privilege. Do not make the bucket public or remove unrelated denies. Verify the same operation against an authorized test key under the intended role and confirm that unauthorized access remains denied. Preserve a local redacted artifact if an upload fails.\n\n",
+      "source_urls": [
+        "https://docs.aws.amazon.com/AmazonS3/latest/userguide/troubleshoot-403-errors.html"
+      ],
+      "content_hash": "82b4d57e30f4855d6ed020fd8bfd7f1abc8f09d8e0b4b37811d9867a4664fc13",
+      "similarity": 0.7780689597129822
+    }
+  ],
+  "usage": {
+    "inputTokens": 4784,
+    "outputTokens": 1578,
+    "totalTokens": 6362
+  }
+}

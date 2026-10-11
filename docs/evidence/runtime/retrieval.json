@@ -1,0 +1,128 @@
+{
+  "live_embeddings": true,
+  "hits": 12,
+  "total": 12,
+  "hit_at_3": 1.0,
+  "cases": [
+    {
+      "query": "PostgreSQL password authentication failed for app_user",
+      "expected": "DB-AUTH",
+      "top3": [
+        "DB-AUTH",
+        "STARTUP",
+        "DB-NET"
+      ],
+      "hit": true
+    },
+    {
+      "query": "role cannot log in after changing database credentials",
+      "expected": "DB-AUTH",
+      "top3": [
+        "DB-AUTH",
+        "DB-NET",
+        "STARTUP"
+      ],
+      "hit": true
+    },
+    {
+      "query": "database connection refused at host port 5432",
+      "expected": "DB-NET",
+      "top3": [
+        "DB-NET",
+        "DB-AUTH",
+        "STARTUP"
+      ],
+      "hit": true
+    },
+    {
+      "query": "cannot resolve database hostname",
+      "expected": "DB-NET",
+      "top3": [
+        "DB-NET",
+        "DB-AUTH",
+        "STARTUP"
+      ],
+      "hit": true
+    },
+    {
+      "query": "missing required environment variable DATABASE_URL at startup",
+      "expected": "APP-ENV",
+      "top3": [
+        "APP-ENV",
+        "STARTUP",
+        "DB-AUTH"
+      ],
+      "hit": true
+    },
+    {
+      "query": "PutObject AccessDenied while uploading to S3",
+      "expected": "S3-DENY",
+      "top3": [
+        "S3-DENY",
+        "DB-AUTH",
+        "DISK"
+      ],
+      "hit": true
+    },
+    {
+      "query": "httpx.ReadTimeout waiting for catalog upstream response",
+      "expected": "HTTP-TIME",
+      "top3": [
+        "HTTP-TIME",
+        "PROXY",
+        "THROTTLE"
+      ],
+      "hit": true
+    },
+    {
+      "query": "container OOMKilled and out of memory",
+      "expected": "MEMORY",
+      "top3": [
+        "MEMORY",
+        "DISK",
+        "APP-ENV"
+      ],
+      "hit": true
+    },
+    {
+      "query": "No space left on device during log write",
+      "expected": "DISK",
+      "top3": [
+        "DISK",
+        "MEMORY",
+        "STARTUP"
+      ],
+      "hit": true
+    },
+    {
+      "query": "nginx upstream prematurely closed connection 502",
+      "expected": "PROXY",
+      "top3": [
+        "PROXY",
+        "HTTP-TIME",
+        "DB-NET"
+      ],
+      "hit": true
+    },
+    {
+      "query": "Alembic migration revision not found during startup",
+      "expected": "STARTUP",
+      "top3": [
+        "STARTUP",
+        "APP-ENV",
+        "DB-AUTH"
+      ],
+      "hit": true
+    },
+    {
+      "query": "external API TooManyRequests 429 retry limit",
+      "expected": "THROTTLE",
+      "top3": [
+        "THROTTLE",
+        "HTTP-TIME",
+        "S3-DENY"
+      ],
+      "hit": true
+    }
+  ]
+}
