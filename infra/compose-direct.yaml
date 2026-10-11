@@ -1,0 +1,46 @@
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: infra/backend.Dockerfile
+    restart: unless-stopped
+    env_file:
+      - path: private/runtime.env
+        format: raw
+    environment:
+      DATABASE_PATH: /data/cloudlens.sqlite
+      INDEX_PATH: /data/index
+      ARTIFACT_PATH: /data/artifacts
+      COOKIE_SECURE: "true"
+      AWS_EC2_METADATA_DISABLED: "false"
+    volumes:
+      - /srv/cloudlens/runtime:/data
+    expose: ["8000"]
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ap-south-1
+        awslogs-group: /cloudlens/application
+        awslogs-stream: api
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health',timeout=2)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  web:
+    build:
+      context: ..
+      dockerfile: infra/frontend-direct.Dockerfile
+    restart: unless-stopped
+    ports: ["443:443"]
+    volumes:
+      - /srv/cloudlens/tls:/etc/nginx/tls:ro
+    depends_on:
+      api:
+        condition: service_healthy
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ap-south-1
+        awslogs-group: /cloudlens/application
+        awslogs-stream: web
