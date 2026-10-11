@@ -1,0 +1,21 @@
+[project]
+name = "cloudlens"
+version = "0.1.0"
+description = "Evidence-grounded incident analysis demo"
+requires-python = ">=3.12,<3.13"
+dependencies = ["fastapi>=0.115,<1", "uvicorn>=0.30,<1", "pydantic-settings>=2.6,<3", "boto3[crt]>=1.35,<2", "numpy>=2.1,<3", "python-multipart>=0.0.18", "python-dotenv>=1,<2"]
+
+[dependency-groups]
+dev = ["pytest>=8,<10", "httpx>=0.27,<1", "ruff>=0.9,<1"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "B"]
+ignore = ["B008"] # FastAPI dependency declarations are intentional.
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
