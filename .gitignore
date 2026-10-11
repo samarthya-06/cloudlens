@@ -1,0 +1,34 @@
+# Private configuration and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.aws/
+infra/private/
+# Private owner brief and original supplied design reference
+/AGENTS.md
+/design.md
+/docs/progress.md
+# Dependencies and generated outputs
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+node_modules/
+dist/
+.cache/
+*.tsbuildinfo
+.DS_Store
+# Runtime databases, uploaded data, vectors and browser sessions
+/runtime/
+*.sqlite*
+*.db
+*.npz
+*.log
+test-results/
+playwright-report/
+# Historical account probes and pricing snapshots
+/docs/evidence/runtime/aws-preflight.json
+/docs/evidence/runtime/pricing.json
+/docs/evidence/runtime/gemini-preflight.json

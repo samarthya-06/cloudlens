@@ -1,0 +1,15 @@
+.git
+.env
+.env.*
+infra/private
+AGENTS.md
+design.md
+runtime
+docs
+frontend/node_modules
+backend/.venv
+backend/tests
+frontend/tests
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
