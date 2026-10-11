@@ -147,6 +147,3 @@ This is a single-instance classroom demo, not a production service. Causes are h
 
 [Architecture](docs/architecture.md) · [Design handoff](docs/paper-handoff.md) · [Design decisions](docs/design-decisions.md) · [Evaluation](docs/evaluation.md) · [Demo script](docs/demo-script.md) · [Presentation outline](docs/presentation-outline.md)
 
-## Repository history
-
-The first 40 commits organize an existing implementation into reviewable modules. They were created as an initial import and do not represent backdated development activity.
