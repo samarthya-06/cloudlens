@@ -1,0 +1,2 @@
+2026-10-11T14:10:00Z INFO synthetic application startup complete
+2026-10-11T14:10:01Z INFO GET /health returned 200
