@@ -37,7 +37,7 @@ class Settings(BaseSettings):
 
     @property
     def origins(self) -> set[str]:
-        return set(self.allowed_origins.split(","))
+        return {origin.strip() for origin in self.allowed_origins.split(",") if origin.strip()}
 
     @property
     def generation_model(self) -> str:

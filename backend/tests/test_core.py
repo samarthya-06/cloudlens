@@ -253,3 +253,8 @@ def test_runbook_set():
     assert len(chunks) == 10
     assert len({c.id for c in chunks}) == 10
     assert all(c.source_urls and 230 <= len(c.text.split()) <= 400 for c in chunks)
+
+
+def test_origins_ignore_whitespace_and_empty_entries(tmp_path):
+    config = settings(tmp_path, allowed_origins="https://a.example, https://b.example,,")
+    assert config.origins == {"https://a.example", "https://b.example"}
